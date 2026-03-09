@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T14:10:04.368Z",
+  "generated": "2026-03-09T19:10:01.068Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -28,6 +28,17 @@
       "query": "macbook m4",
       "min": 500,
       "max": 1000,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "umchey7",
+      "query": "17 pro",
+      "min": 800,
+      "max": 900,
       "active": true,
       "platforms": [
         "ebay",
