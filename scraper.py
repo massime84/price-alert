@@ -197,93 +197,152 @@ def search_ebay(query: str, variants: list[str], price_min: float, price_max: fl
 
 
 # ── SUBITO.IT SEARCH ─────────────────────────────────────────────────
-def search_subito_rss(query: str, price_min: float, price_max: float) -> list[dict]:
-    """Search Subito.it via RSS feed — not blocked by anti-scraping."""
-    query_enc = requests.utils.quote(query)
-    rss_url = (
-        f"https://www.subito.it/annunci-italia/vendita/usato/rss/"
-        f"?q={query_enc}&ps={int(price_min)}&pe={int(price_max)}&sort=datedesc"
-    )
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; RSS reader)",
-        "Accept": "application/rss+xml, application/xml, text/xml, */*",
-    }
+def search_subito_browser(query: str, price_min: float, price_max: float) -> list[dict]:
+    """Search Subito.it using a real headless browser via Playwright."""
     try:
-        time.sleep(random.uniform(1, 2))
-        r = requests.get(rss_url, headers=headers, timeout=15)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.content, "xml")
-        items = soup.find_all("item")
-        results = []
-        query_lower = query.lower()
-        for item in items:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("[Subito.it] Playwright not installed, skipping.")
+        return []
+
+    query_enc = requests.utils.quote(query)
+    url = (
+        f"https://www.subito.it/annunci-italia/vendita/usato/"
+        f"?q={query_enc}&qso=true&ps={int(price_min)}&pe={int(price_max)}&sort=datedesc"
+    )
+
+    results = []
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
+            )
+            context = browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/122.0.0.0 Safari/537.36"
+                ),
+                viewport={"width": 1280, "height": 800},
+                locale="it-IT",
+                timezone_id="Europe/Rome",
+                extra_http_headers={
+                    "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                },
+            )
+            # Mask automation fingerprints
+            context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3] });
+                window.chrome = { runtime: {} };
+            """)
+
+            page = context.new_page()
+            time.sleep(random.uniform(1, 2))
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            time.sleep(random.uniform(2, 3))
+
+            # Accept cookie banner if present
             try:
-                title    = item.find("title").get_text(strip=True) if item.find("title") else ""
-                link     = item.find("link").get_text(strip=True) if item.find("link") else ""
-                desc     = item.find("description").get_text(" ", strip=True) if item.find("description") else ""
-                pub_date = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
-
-                # Extract price from description or title
-                price_val = 0.0
-                import re
-                price_match = re.search(r'[\€]?\s*(\d[\d\.,]+)', desc + " " + title)
-                if price_match:
-                    raw = price_match.group(1).replace(".", "").replace(",", ".")
-                    try:
-                        price_val = float(raw)
-                    except ValueError:
-                        pass
-
-                # Extract image
-                image = ""
-                img_tag = item.find("enclosure") or item.find("media:content") or item.find("media:thumbnail")
-                if img_tag:
-                    image = img_tag.get("url", "")
-
-                # Check price range
-                if not (price_min <= price_val <= price_max):
-                    continue
-
-                # Check if query matches title or description
-                full_text = (title + " " + desc).lower()
-                if query_lower not in full_text:
-                    continue
-
-                found_in = None
-                if query_lower not in title.lower() and query_lower in desc.lower():
-                    found_in = "descrizione"
-
-                if link:
-                    results.append({
-                        "source":          "Subito.it",
-                        "title":           title,
-                        "price":           price_val,
-                        "url":             link,
-                        "image":           image,
-                        "location":        "Italia",
-                        "date":            pub_date,
-                        "matched_variant": query,
-                        "found_in":        found_in,
-                    })
+                page.click("button:has-text('Accetta')", timeout=3000)
+                time.sleep(1)
             except Exception:
                 pass
+
+            # Parse results from page content
+            soup = BeautifulSoup(page.content(), "html.parser")
+            browser.close()
+
+            query_lower = query.lower()
+
+            # Try JSON-LD
+            for tag in soup.find_all("script", {"type": "application/ld+json"}):
+                try:
+                    data = json.loads(tag.string or "")
+                    items = data if isinstance(data, list) else [data]
+                    for item in items:
+                        if item.get("@type") not in ("Product", "Offer"):
+                            continue
+                        offers = item.get("offers", {})
+                        price_val = float(offers.get("price", 0) or 0)
+                        link = item.get("url", "")
+                        if price_min <= price_val <= price_max and link:
+                            results.append({
+                                "source": "Subito.it",
+                                "title": item.get("name", ""),
+                                "price": price_val,
+                                "url": link,
+                                "image": (item.get("image", [""])[0]
+                                          if isinstance(item.get("image"), list)
+                                          else item.get("image", "")),
+                                "location": offers.get("availableAtOrFrom", {}).get("name", "Italia"),
+                                "date": "",
+                                "matched_variant": query,
+                                "found_in": None,
+                            })
+                except Exception:
+                    pass
+
+            # Fallback: HTML cards
+            if not results:
+                for card in soup.select("article[class*='item-card'], div[class*='AdItem'], [class*='item--']"):
+                    try:
+                        title_el = card.select_one("[class*='title'], h2, h3")
+                        price_el = card.select_one("[class*='price']")
+                        link_el  = card.select_one("a[href]")
+                        img_el   = card.select_one("img")
+                        if not (title_el and price_el and link_el):
+                            continue
+                        price_text = re.sub(r'[^\d,.]', '', price_el.get_text(strip=True).replace(".", "").replace(",", "."))
+                        price_val = float(price_text or 0)
+                        href = link_el.get("href", "")
+                        if not href.startswith("http"):
+                            href = "https://www.subito.it" + href
+                        title = title_el.get_text(strip=True)
+                        if price_min <= price_val <= price_max and href:
+                            found_in = None
+                            if query_lower not in title.lower():
+                                found_in = "descrizione"
+                            results.append({
+                                "source": "Subito.it",
+                                "title": title,
+                                "price": price_val,
+                                "url": href,
+                                "image": img_el.get("src", "") if img_el else "",
+                                "location": "Italia",
+                                "date": "",
+                                "matched_variant": query,
+                                "found_in": found_in,
+                            })
+                    except Exception:
+                        pass
+
+        print(f"[Subito.it Browser] Found {len(results)} listings for '{query}'")
         return results
+
     except Exception as e:
-        print(f"[Subito.it RSS] Error for '{query}': {e}")
+        print(f"[Subito.it Browser] Error for '{query}': {e}")
         return []
 
 
 def search_subito(query: str, variants: list[str], price_min: float, price_max: float) -> list[dict]:
-    """Search Subito.it via RSS with all variants, deduplicate by URL."""
+    """Search Subito.it via headless browser with all variants, deduplicate by URL."""
     all_results = {}
     for v in variants:
-        results = search_subito_rss(v, price_min, price_max)
+        results = search_subito_browser(v, price_min, price_max)
         for r in results:
             uid = make_id(r["url"])
             if uid not in all_results:
                 all_results[uid] = r
         if len(variants) > 1:
-            time.sleep(random.uniform(0.5, 1))
+            time.sleep(random.uniform(1, 2))
     print(f"[Subito.it] '{query}' → {len(all_results)} unique listings across {len(variants)} variants")
     return list(all_results.values())
 
