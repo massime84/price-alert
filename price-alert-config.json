@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:11:52.192Z",
+  "generated": "2026-03-09T19:16:42.908Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -72,6 +72,17 @@
       "query": "playstation 5",
       "min": 180,
       "max": 230,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "yhv1lbu",
+      "query": "16 pro",
+      "min": 500,
+      "max": 650,
       "active": true,
       "platforms": [
         "ebay",
