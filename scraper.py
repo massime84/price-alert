@@ -198,7 +198,7 @@ def search_ebay(query: str, variants: list[str], price_min: float, price_max: fl
 
 # ── SUBITO.IT SEARCH ─────────────────────────────────────────────────
 def search_subito_browser(query: str, price_min: float, price_max: float) -> list[dict]:
-    """Search Subito.it using a real headless browser via Playwright."""
+    """Search Subito.it using real Chrome browser (non-headless) to bypass Akamai."""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -214,18 +214,39 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
     results = []
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=True,
+            # Use real Chrome if available, otherwise Chromium non-headless
+            import subprocess, shutil
+            chrome_path = None
+            candidates = [
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                shutil.which("google-chrome"),
+                shutil.which("chromium"),
+            ]
+            for c in candidates:
+                if c and os.path.exists(c):
+                    chrome_path = c
+                    break
+
+            launch_opts = dict(
+                headless=False,  # visible browser — harder to detect
                 args=[
-                    "--no-sandbox",
                     "--disable-blink-features=AutomationControlled",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
+                    "--no-sandbox",
+                    "--disable-infobars",
+                    "--start-maximized",
                 ],
             )
+            if chrome_path:
+                launch_opts["executable_path"] = chrome_path
+                print(f"[Subito.it] Using real browser: {chrome_path}")
+            else:
+                print("[Subito.it] Using Playwright Chromium (non-headless)")
+
+            browser = p.chromium.launch(**launch_opts)
             context = browser.new_context(
                 user_agent=(
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
                     "Chrome/122.0.0.0 Safari/537.36"
                 ),
@@ -234,40 +255,47 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
                 timezone_id="Europe/Rome",
                 extra_http_headers={
                     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 },
             )
-            # Mask automation fingerprints
             context.add_init_script("""
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-                Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3] });
-                window.chrome = { runtime: {} };
+                Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['it-IT', 'it', 'en'] });
+                window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){} };
+                Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
             """)
 
             page = context.new_page()
-            time.sleep(random.uniform(1, 2))
-            page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            time.sleep(random.uniform(2, 3))
+            # First visit homepage to set cookies naturally
+            page.goto("https://www.subito.it/", wait_until="domcontentloaded", timeout=30000)
+            time.sleep(random.uniform(2, 4))
 
-            # Accept cookie banner if present
+            # Accept cookies if banner appears
             try:
-                page.click("button:has-text('Accetta')", timeout=3000)
+                page.click("button:has-text('Accetta')", timeout=4000)
                 time.sleep(1)
             except Exception:
-                pass
+                try:
+                    page.click("button:has-text('Acconsento')", timeout=2000)
+                    time.sleep(1)
+                except Exception:
+                    pass
+
+            # Now go to search page
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            time.sleep(random.uniform(3, 5))
 
             html = page.content()
+            title = page.title()
+            print(f"[Subito.it Debug] Page title: {title} | HTML length: {len(html)}")
 
-            # DEBUG: save first 8000 chars to understand page structure
-            with open("subito_debug.html", "w") as f:
-                f.write(html[:8000])
-            print(f"[Subito.it Debug] Page title: {page.title()}")
-            print(f"[Subito.it Debug] HTML length: {len(html)}")
-            print(f"[Subito.it Debug] First 500 chars: {html[:500]}")
-
-            soup = BeautifulSoup(html, "html.parser")
             browser.close()
 
+            if "Access Denied" in title or len(html) < 1000:
+                print(f"[Subito.it] Still blocked for '{query}'")
+                return []
+
+            soup = BeautifulSoup(html, "html.parser")
             query_lower = query.lower()
 
             # Try JSON-LD
@@ -313,21 +341,18 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
                         href = link_el.get("href", "")
                         if not href.startswith("http"):
                             href = "https://www.subito.it" + href
-                        title = title_el.get_text(strip=True)
+                        title_text = title_el.get_text(strip=True)
                         if price_min <= price_val <= price_max and href:
-                            found_in = None
-                            if query_lower not in title.lower():
-                                found_in = "descrizione"
                             results.append({
                                 "source": "Subito.it",
-                                "title": title,
+                                "title": title_text,
                                 "price": price_val,
                                 "url": href,
                                 "image": img_el.get("src", "") if img_el else "",
                                 "location": "Italia",
                                 "date": "",
                                 "matched_variant": query,
-                                "found_in": found_in,
+                                "found_in": None,
                             })
                     except Exception:
                         pass
