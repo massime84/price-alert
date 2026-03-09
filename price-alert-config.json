@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:10:50.285Z",
+  "generated": "2026-03-09T19:11:23.415Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -61,6 +61,17 @@
       "query": "watch ultra 3",
       "min": 400,
       "max": 550,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "psn7q8f",
+      "query": "playstation 5",
+      "min": 180,
+      "max": 230,
       "active": true,
       "platforms": [
         "ebay",
