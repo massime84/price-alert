@@ -240,18 +240,95 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
 
             soup = BeautifulSoup(html, "html.parser")
 
-            # DEBUG: find all links containing subito.it/annunci
-            links = soup.find_all("a", href=lambda h: h and "/annunci" in h)
-            print(f"[Subito.it Debug] Annunci links found: {len(links)}")
-            for l in links[:3]:
-                print(f"  → {l.get('href','')} | text: {l.get_text(strip=True)[:60]}")
+            # Subito.it uses Next.js — all data is in __NEXT_DATA__ script tag
+            next_data = soup.find("script", {"id": "__NEXT_DATA__"})
+            if not next_data:
+                # Fallback: find script containing pageProps
+                for script in soup.find_all("script"):
+                    if script.string and '"pageName":"listing"' in (script.string or ""):
+                        next_data = script
+                        break
 
-            # DEBUG: look for price patterns
-            import re as _re
-            price_els = soup.find_all(string=_re.compile(r'€\s*\d+'))
-            print(f"[Subito.it Debug] Price strings found: {len(price_els)}")
-            for p in price_els[:3]:
-                print(f"  → '{p.strip()[:60]}' in <{p.parent.name} class='{p.parent.get('class','')}'>")
+            if next_data and next_data.string:
+                try:
+                    data = json.loads(next_data.string)
+                    # Navigate to ads list
+                    ads = (data.get("props", {})
+                               .get("pageProps", {})
+                               .get("initialState", {})
+                               .get("listing", {})
+                               .get("listing", {})
+                               .get("ads", []))
+
+                    # Alternative path
+                    if not ads:
+                        ads = (data.get("props", {})
+                                   .get("pageProps", {})
+                                   .get("ads", []))
+
+                    # Another alternative
+                    if not ads:
+                        page_props = data.get("props", {}).get("pageProps", {})
+                        for key in page_props:
+                            val = page_props[key]
+                            if isinstance(val, dict) and "ads" in val:
+                                ads = val["ads"]
+                                break
+                            if isinstance(val, list) and len(val) > 0:
+                                ads = val
+                                break
+
+                    print(f"[Subito.it Debug] JSON ads found: {len(ads)}")
+                    if ads:
+                        print(f"[Subito.it Debug] First ad keys: {list(ads[0].keys()) if ads else []}")
+
+                    for ad in ads:
+                        try:
+                            # Extract price
+                            prices = ad.get("prices", {}) or {}
+                            price_val = float(
+                                prices.get("price", {}).get("value", 0) or
+                                ad.get("price", 0) or 0
+                            )
+                            if not (price_min <= price_val <= price_max):
+                                continue
+
+                            # Extract URL
+                            urls = ad.get("urls", {}) or {}
+                            link = urls.get("default", "") or ad.get("url", "") or ad.get("uri", "")
+                            if not link:
+                                continue
+
+                            # Extract image
+                            images = ad.get("images", []) or []
+                            image = ""
+                            if images:
+                                scales = images[0].get("scale", []) or []
+                                image = scales[-1].get("uri", "") if scales else ""
+
+                            # Extract location
+                            geo = ad.get("geo", {}) or {}
+                            city = geo.get("city", {}) or {}
+                            location = city.get("value", "") or "Italia"
+
+                            results.append({
+                                "source": "Subito.it",
+                                "title": ad.get("subject", ""),
+                                "price": price_val,
+                                "url": link,
+                                "image": image,
+                                "location": location,
+                                "date": ad.get("date", ""),
+                                "matched_variant": query,
+                                "found_in": None,
+                            })
+                        except Exception as e:
+                            pass
+
+                except Exception as e:
+                    print(f"[Subito.it] JSON parse error: {e}")
+
+            print(f"[Subito.it Debug] Results extracted: {len(results)}")
 
             # Try JSON-LD
             for tag in soup.find_all("script", {"type": "application/ld+json"}):
