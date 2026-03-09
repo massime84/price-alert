@@ -22,7 +22,7 @@ EMAIL_FROM     = os.environ.get("EMAIL_FROM", "")
 EMAIL_TO       = os.environ.get("EMAIL_TO", "")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 EBAY_APP_ID    = os.environ.get("EBAY_APP_ID", "")
-ANTHROPIC_KEY  = os.environ.get("ANTHROPIC_API_KEY", "")
+
 CONFIG_FILE    = "price-alert-config.json"
 SEEN_FILE      = "seen_listings.json"
 MAX_SUBITO_DESC_CHECKS = 30  # max annunci di cui leggere la descrizione per query
@@ -56,60 +56,73 @@ def make_id(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()
 
 
-# ── AI QUERY VARIANTS ────────────────────────────────────────────────
+# ── QUERY VARIANTS (free, local rules) ──────────────────────────────
 def generate_variants(query: str) -> list[str]:
-    """Use Claude AI to generate search variants including typos and abbreviations."""
-    if not ANTHROPIC_KEY:
-        print(f"[AI] No API key, using original query only: '{query}'")
-        return [query]
+    """Generate search variants using local rules — no API needed."""
+    variants = set()
+    q = query.strip().lower()
+    variants.add(q)
 
-    prompt = f"""Sei un esperto di ricerche su siti di annunci italiani come Subito.it ed eBay.
-Per il prodotto "{query}", genera una lista di varianti di ricerca che includono:
-- Errori di battitura comuni (es. "macbok", "machbook")
-- Variazioni di spaziatura (es. "mac book", "macbook m 1")  
-- Abbreviazioni comuni usate dai venditori italiani
-- Varianti senza spazi o con spazi extra
-- Eventuali nomi alternativi usati colloquialmente
+    words = q.split()
 
-Rispondi SOLO con un array JSON di stringhe, senza spiegazioni, senza markdown, senza backtick.
-Massimo 8 varianti totali inclusa quella originale. Esempio formato: ["query1","query2","query3"]"""
+    # 1. Remove all spaces → "macbookm1"
+    variants.add("".join(words))
 
-    try:
-        r = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 300,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=15,
-        )
-        r.raise_for_status()
-        text = r.json()["content"][0]["text"].strip()
-        # strip any accidental markdown fences
-        text = text.replace("```json", "").replace("```", "").strip()
-        variants = json.loads(text)
-        if not isinstance(variants, list):
-            raise ValueError("Not a list")
-        # always include original
-        if query not in variants:
-            variants.insert(0, query)
-        variants = list(dict.fromkeys(v.strip() for v in variants if v.strip()))[:8]
-        print(f"[AI] Variants for '{query}': {variants}")
-        return variants
-    except Exception as e:
-        print(f"[AI] Error generating variants: {e} — using original only")
-        return [query]
+    # 2. Each word pair joined without space
+    for i in range(len(words) - 1):
+        joined = words[:i] + [words[i] + words[i+1]] + words[i+2:]
+        variants.add(" ".join(joined))
+
+    # 3. Add space inside each word (split at each char boundary)
+    for i, word in enumerate(words):
+        for j in range(1, len(word)):
+            new_words = words[:i] + [word[:j], word[j:]] + words[i+1:]
+            variants.add(" ".join(new_words))
+
+    # 4. Common tech typo rules
+    typo_map = {
+        "macbook":  ["mac book", "macbok", "machbook", "macboo", "mac-book", "mcbook", "maccbook"],
+        "mac":      ["mack", "mac "],
+        "iphone":   ["i phone", "iphon", "ifone"],
+        "ipad":     ["i pad", "ipd"],
+        "samsung":  ["samsng", "samung", "samsun"],
+        "playstation": ["play station", "playstaton", "playsation"],
+        "nintendo": ["nitendo", "nintedo"],
+        "airpods":  ["air pods", "airpod", "air pod"],
+        "m1":       ["m 1", "m-1"],
+        "m2":       ["m 2", "m-2"],
+        "m3":       ["m 3", "m-3"],
+        "pro":      ["pr0", "proe"],
+        "air":      ["air "],
+        "mini":     ["mni", "min1"],
+        "plus":     ["plu", "pls"],
+        "ultra":    ["ulta", "ultra "],
+    }
+    for word, typos in typo_map.items():
+        if word in q:
+            for typo in typos:
+                variants.add(q.replace(word, typo).strip())
+
+    # 5. Drop last character of each word (truncated search)
+    truncated = " ".join(w[:-1] if len(w) > 3 else w for w in words)
+    if truncated != q:
+        variants.add(truncated)
+
+    # 6. Original with capital first letter (some platforms are case sensitive)
+    variants.add(query.strip())
+
+    # Clean up and limit
+    result = [v.strip() for v in variants if len(v.strip()) >= 3]
+    result = list(dict.fromkeys(result))[:8]  # deduplicate, max 8
+
+    print(f"[Variants] '{query}' → {result}")
+    return result
 
 
 # ── eBay SEARCH ──────────────────────────────────────────────────────
 def search_ebay_single(query: str, price_min: float, price_max: float) -> list[dict]:
     if not EBAY_APP_ID:
+        print("[eBay] EBAY_APP_ID not set, skipping.")
         return []
     url = "https://svcs.ebay.com/services/search/FindingService/v1"
     params = {
@@ -132,9 +145,6 @@ def search_ebay_single(query: str, price_min: float, price_max: float) -> list[d
         "itemFilter(2).value": "AuctionWithBIN,FixedPrice",
         "itemFilter(3).name": "Condition",
         "itemFilter(3).value": "Used",
-        # Search in title AND description
-        "itemFilter(4).name": "LocatedIn",
-        "itemFilter(4).value": "IT",
         "sortOrder": "StartTimeNewest",
         "outputSelector": "PictureURLSuperSize",
     }
@@ -218,18 +228,92 @@ def search_subito_single(query: str, price_min: float, price_max: float,
         f"&ps={int(price_min)}&pe={int(price_max)}"
         f"&sort=datedesc"
     )
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    ]
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36"
-        ),
-        "Accept-Language": "it-IT,it;q=0.9",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": random.choice(user_agents),
+        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Cache-Control": "max-age=0",
     }
 
+    # Try Subito.it internal API first (more reliable than scraping)
     try:
-        time.sleep(random.uniform(1.5, 2.5))
+        api_url = "https://api.subito.it/v1/search/items"
+        api_params = {
+            "q": query,
+            "sort": "datedesc",
+            "ps": int(price_min),
+            "pe": int(price_max),
+            "t": "s",  # sell
+            "lim": 40,
+            "start": 0,
+        }
+        api_headers = {
+            "User-Agent": random.choice(user_agents),
+            "Accept": "application/json",
+            "Accept-Language": "it-IT,it;q=0.9",
+            "Origin": "https://www.subito.it",
+            "Referer": "https://www.subito.it/",
+        }
+        time.sleep(random.uniform(1, 2))
+        api_r = requests.get(api_url, params=api_params, headers=api_headers, timeout=15)
+        if api_r.status_code == 200:
+            api_data = api_r.json()
+            items = api_data.get("ads", []) or api_data.get("items", []) or []
+            results = []
+            for item in items:
+                try:
+                    price_val = float(item.get("prices", {}).get("price", {}).get("value", 0) or
+                                     item.get("price", 0) or 0)
+                    if not (price_min <= price_val <= price_max):
+                        continue
+                    link = item.get("urls", {}).get("default", "") or item.get("url", "")
+                    if not link:
+                        continue
+                    images = item.get("images", [])
+                    image = images[0].get("scale", [{}])[-1].get("uri", "") if images else ""
+                    geo = item.get("geo", {})
+                    location = geo.get("city", {}).get("value", "") or geo.get("region", {}).get("value", "Italia")
+                    results.append({
+                        "source": "Subito.it",
+                        "title": item.get("subject", ""),
+                        "price": price_val,
+                        "url": link,
+                        "image": image,
+                        "location": location,
+                        "date": item.get("date", ""),
+                        "matched_variant": query,
+                        "body": item.get("body", "").lower(),
+                    })
+                except Exception:
+                    pass
+            if results:
+                print(f"[Subito.it API] Found {len(results)} listings for '{query}'")
+                # description check via API body field
+                query_lower = query.lower()
+                final = []
+                for r in results:
+                    body = r.pop("body", "")
+                    r["found_in"] = "descrizione" if (query_lower in body and query_lower not in r["title"].lower()) else None
+                    final.append(r)
+                return final
+    except Exception as e:
+        print(f"[Subito.it API] Failed: {e}, falling back to scraping")
+
+    try:
+        time.sleep(random.uniform(2, 3))
         r = requests.get(url, headers=headers, timeout=15)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
