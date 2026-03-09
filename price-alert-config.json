@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:17:21.752Z",
+  "generated": "2026-03-09T19:18:05.973Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -105,6 +105,17 @@
       "query": "iphone 15 pro",
       "min": 350,
       "max": 500,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "khey61d",
+      "query": "watch ultra 2",
+      "min": 250,
+      "max": 390,
       "active": true,
       "platforms": [
         "ebay",
