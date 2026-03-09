@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:25:29.591Z",
+  "generated": "2026-03-09T19:25:51.069Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -127,6 +127,17 @@
       "query": "Brionvega cubo",
       "min": 50,
       "max": 120,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "m96ltux",
+      "query": "14 pro",
+      "min": 250,
+      "max": 350,
       "active": true,
       "platforms": [
         "ebay",
