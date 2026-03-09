@@ -58,65 +58,8 @@ def make_id(url: str) -> str:
 
 # ── QUERY VARIANTS (free, local rules) ──────────────────────────────
 def generate_variants(query: str) -> list[str]:
-    """Generate search variants using local rules — no API needed."""
-    variants = set()
-    q = query.strip().lower()
-    variants.add(q)
-
-    words = q.split()
-
-    # 1. Remove all spaces → "macbookm1"
-    variants.add("".join(words))
-
-    # 2. Each word pair joined without space
-    for i in range(len(words) - 1):
-        joined = words[:i] + [words[i] + words[i+1]] + words[i+2:]
-        variants.add(" ".join(joined))
-
-    # 3. Add space inside each word (split at each char boundary)
-    for i, word in enumerate(words):
-        for j in range(1, len(word)):
-            new_words = words[:i] + [word[:j], word[j:]] + words[i+1:]
-            variants.add(" ".join(new_words))
-
-    # 4. Common tech typo rules
-    typo_map = {
-        "macbook":  ["mac book", "macbok", "machbook", "macboo", "mac-book", "mcbook", "maccbook"],
-        "mac":      ["mack", "mac "],
-        "iphone":   ["i phone", "iphon", "ifone"],
-        "ipad":     ["i pad", "ipd"],
-        "samsung":  ["samsng", "samung", "samsun"],
-        "playstation": ["play station", "playstaton", "playsation"],
-        "nintendo": ["nitendo", "nintedo"],
-        "airpods":  ["air pods", "airpod", "air pod"],
-        "m1":       ["m 1", "m-1"],
-        "m2":       ["m 2", "m-2"],
-        "m3":       ["m 3", "m-3"],
-        "pro":      ["pr0", "proe"],
-        "air":      ["air "],
-        "mini":     ["mni", "min1"],
-        "plus":     ["plu", "pls"],
-        "ultra":    ["ulta", "ultra "],
-    }
-    for word, typos in typo_map.items():
-        if word in q:
-            for typo in typos:
-                variants.add(q.replace(word, typo).strip())
-
-    # 5. Drop last character of each word (truncated search)
-    truncated = " ".join(w[:-1] if len(w) > 3 else w for w in words)
-    if truncated != q:
-        variants.add(truncated)
-
-    # 6. Original with capital first letter (some platforms are case sensitive)
-    variants.add(query.strip())
-
-    # Clean up and limit
-    result = [v.strip() for v in variants if len(v.strip()) >= 3]
-    result = list(dict.fromkeys(result))[:8]  # deduplicate, max 8
-
-    print(f"[Variants] '{query}' → {result}")
-    return result
+    """Return only the exact query — no typo variants."""
+    return [query.strip()]
 
 
 # ── eBay SEARCH ──────────────────────────────────────────────────────
@@ -296,7 +239,19 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
                 return []
 
             soup = BeautifulSoup(html, "html.parser")
-            query_lower = query.lower()
+
+            # DEBUG: find all links containing subito.it/annunci
+            links = soup.find_all("a", href=lambda h: h and "/annunci" in h)
+            print(f"[Subito.it Debug] Annunci links found: {len(links)}")
+            for l in links[:3]:
+                print(f"  → {l.get('href','')} | text: {l.get_text(strip=True)[:60]}")
+
+            # DEBUG: look for price patterns
+            import re as _re
+            price_els = soup.find_all(string=_re.compile(r'€\s*\d+'))
+            print(f"[Subito.it Debug] Price strings found: {len(price_els)}")
+            for p in price_els[:3]:
+                print(f"  → '{p.strip()[:60]}' in <{p.parent.name} class='{p.parent.get('class','')}'>")
 
             # Try JSON-LD
             for tag in soup.find_all("script", {"type": "application/ld+json"}):
