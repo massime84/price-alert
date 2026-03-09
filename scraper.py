@@ -256,8 +256,16 @@ def search_subito_browser(query: str, price_min: float, price_max: float) -> lis
             except Exception:
                 pass
 
-            # Parse results from page content
-            soup = BeautifulSoup(page.content(), "html.parser")
+            html = page.content()
+
+            # DEBUG: save first 8000 chars to understand page structure
+            with open("subito_debug.html", "w") as f:
+                f.write(html[:8000])
+            print(f"[Subito.it Debug] Page title: {page.title()}")
+            print(f"[Subito.it Debug] HTML length: {len(html)}")
+            print(f"[Subito.it Debug] First 500 chars: {html[:500]}")
+
+            soup = BeautifulSoup(html, "html.parser")
             browser.close()
 
             query_lower = query.lower()
