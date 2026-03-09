@@ -1,0 +1,16 @@
+{
+  "generated": "2026-03-09T13:52:08.964Z",
+  "searches": [
+    {
+      "id": "qtp3jue",
+      "query": "macbook m1",
+      "min": 250,
+      "max": 350,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    }
+  ]
+}
