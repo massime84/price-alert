@@ -26,7 +26,10 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: |
+          pip install requests beautifulsoup4 playwright
+          playwright install chromium
+          playwright install-deps chromium
 
       - name: Run price alert scraper
         env:
@@ -34,5 +37,5 @@ jobs:
           EMAIL_TO:            ${{ secrets.EMAIL_TO }}
           EMAIL_PASSWORD:      ${{ secrets.EMAIL_PASSWORD }}
           EBAY_APP_ID:         ${{ secrets.EBAY_APP_ID }}
-          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
+
         run: python scraper.py
