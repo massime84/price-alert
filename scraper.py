@@ -12,6 +12,7 @@ import requests
 import hashlib
 import time
 import random
+import re
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -25,7 +26,6 @@ EBAY_APP_ID    = os.environ.get("EBAY_APP_ID", "")
 
 CONFIG_FILE    = "price-alert-config.json"
 SEEN_FILE      = "seen_listings.json"
-MAX_SUBITO_DESC_CHECKS = 30  # max annunci di cui leggere la descrizione per query
 # ────────────────────────────────────────────────────────────────────
 
 
@@ -197,258 +197,93 @@ def search_ebay(query: str, variants: list[str], price_min: float, price_max: fl
 
 
 # ── SUBITO.IT SEARCH ─────────────────────────────────────────────────
-def fetch_subito_description(url: str, headers: dict) -> str:
-    """Fetch the full description of a Subito.it listing."""
-    try:
-        time.sleep(random.uniform(0.8, 1.5))
-        r = requests.get(url, headers=headers, timeout=12)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        # Try common description selectors
-        for sel in [
-            "[class*='description']",
-            "[class*='AdDescription']",
-            "[class*='item-description']",
-            "div[data-testid*='description']",
-        ]:
-            el = soup.select_one(sel)
-            if el:
-                return el.get_text(" ", strip=True).lower()
-        return ""
-    except Exception:
-        return ""
-
-
-def search_subito_single(query: str, price_min: float, price_max: float,
-                          search_description: bool = True) -> list[dict]:
+def search_subito_rss(query: str, price_min: float, price_max: float) -> list[dict]:
+    """Search Subito.it via RSS feed — not blocked by anti-scraping."""
     query_enc = requests.utils.quote(query)
-    url = (
-        f"https://www.subito.it/annunci-italia/vendita/usato/"
-        f"?q={query_enc}&qso=true"
-        f"&ps={int(price_min)}&pe={int(price_max)}"
-        f"&sort=datedesc"
+    rss_url = (
+        f"https://www.subito.it/annunci-italia/vendita/usato/rss/"
+        f"?q={query_enc}&ps={int(price_min)}&pe={int(price_max)}&sort=datedesc"
     )
-    user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    ]
     headers = {
-        "User-Agent": random.choice(user_agents),
-        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Cache-Control": "max-age=0",
+        "User-Agent": "Mozilla/5.0 (compatible; RSS reader)",
+        "Accept": "application/rss+xml, application/xml, text/xml, */*",
     }
-
-    # Try Subito.it internal API first (more reliable than scraping)
     try:
-        api_url = "https://api.subito.it/v1/search/items"
-        api_params = {
-            "q": query,
-            "sort": "datedesc",
-            "ps": int(price_min),
-            "pe": int(price_max),
-            "t": "s",  # sell
-            "lim": 40,
-            "start": 0,
-        }
-        api_headers = {
-            "User-Agent": random.choice(user_agents),
-            "Accept": "application/json",
-            "Accept-Language": "it-IT,it;q=0.9",
-            "Origin": "https://www.subito.it",
-            "Referer": "https://www.subito.it/",
-        }
         time.sleep(random.uniform(1, 2))
-        api_r = requests.get(api_url, params=api_params, headers=api_headers, timeout=15)
-        if api_r.status_code == 200:
-            api_data = api_r.json()
-            items = api_data.get("ads", []) or api_data.get("items", []) or []
-            results = []
-            for item in items:
-                try:
-                    price_val = float(item.get("prices", {}).get("price", {}).get("value", 0) or
-                                     item.get("price", 0) or 0)
-                    if not (price_min <= price_val <= price_max):
-                        continue
-                    link = item.get("urls", {}).get("default", "") or item.get("url", "")
-                    if not link:
-                        continue
-                    images = item.get("images", [])
-                    image = images[0].get("scale", [{}])[-1].get("uri", "") if images else ""
-                    geo = item.get("geo", {})
-                    location = geo.get("city", {}).get("value", "") or geo.get("region", {}).get("value", "Italia")
-                    results.append({
-                        "source": "Subito.it",
-                        "title": item.get("subject", ""),
-                        "price": price_val,
-                        "url": link,
-                        "image": image,
-                        "location": location,
-                        "date": item.get("date", ""),
-                        "matched_variant": query,
-                        "body": item.get("body", "").lower(),
-                    })
-                except Exception:
-                    pass
-            if results:
-                print(f"[Subito.it API] Found {len(results)} listings for '{query}'")
-                # description check via API body field
-                query_lower = query.lower()
-                final = []
-                for r in results:
-                    body = r.pop("body", "")
-                    r["found_in"] = "descrizione" if (query_lower in body and query_lower not in r["title"].lower()) else None
-                    final.append(r)
-                return final
-    except Exception as e:
-        print(f"[Subito.it API] Failed: {e}, falling back to scraping")
-
-    try:
-        time.sleep(random.uniform(2, 3))
-        r = requests.get(url, headers=headers, timeout=15)
+        r = requests.get(rss_url, headers=headers, timeout=15)
         r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-
+        soup = BeautifulSoup(r.content, "xml")
+        items = soup.find_all("item")
         results = []
-
-        # Try JSON-LD first
-        for tag in soup.find_all("script", {"type": "application/ld+json"}):
+        query_lower = query.lower()
+        for item in items:
             try:
-                data = json.loads(tag.string or "")
-                items = data if isinstance(data, list) else [data]
-                for item in items:
-                    if item.get("@type") not in ("Product", "Offer"):
-                        continue
-                    offers = item.get("offers", {})
-                    price_val = float(offers.get("price", 0) or 0)
-                    link = item.get("url", "")
-                    if price_min <= price_val <= price_max and link:
-                        results.append({
-                            "source": "Subito.it",
-                            "title": item.get("name", ""),
-                            "price": price_val,
-                            "url": link,
-                            "image": (item.get("image", [""])[0]
-                                      if isinstance(item.get("image"), list)
-                                      else item.get("image", "")),
-                            "location": offers.get("availableAtOrFrom", {}).get("name", "Italia"),
-                            "date": "",
-                            "matched_variant": query,
-                        })
+                title    = item.find("title").get_text(strip=True) if item.find("title") else ""
+                link     = item.find("link").get_text(strip=True) if item.find("link") else ""
+                desc     = item.find("description").get_text(" ", strip=True) if item.find("description") else ""
+                pub_date = item.find("pubDate").get_text(strip=True) if item.find("pubDate") else ""
+
+                # Extract price from description or title
+                price_val = 0.0
+                import re
+                price_match = re.search(r'[\€]?\s*(\d[\d\.,]+)', desc + " " + title)
+                if price_match:
+                    raw = price_match.group(1).replace(".", "").replace(",", ".")
+                    try:
+                        price_val = float(raw)
+                    except ValueError:
+                        pass
+
+                # Extract image
+                image = ""
+                img_tag = item.find("enclosure") or item.find("media:content") or item.find("media:thumbnail")
+                if img_tag:
+                    image = img_tag.get("url", "")
+
+                # Check price range
+                if not (price_min <= price_val <= price_max):
+                    continue
+
+                # Check if query matches title or description
+                full_text = (title + " " + desc).lower()
+                if query_lower not in full_text:
+                    continue
+
+                found_in = None
+                if query_lower not in title.lower() and query_lower in desc.lower():
+                    found_in = "descrizione"
+
+                if link:
+                    results.append({
+                        "source":          "Subito.it",
+                        "title":           title,
+                        "price":           price_val,
+                        "url":             link,
+                        "image":           image,
+                        "location":        "Italia",
+                        "date":            pub_date,
+                        "matched_variant": query,
+                        "found_in":        found_in,
+                    })
             except Exception:
                 pass
-
-        # Fallback: parse HTML cards
-        if not results:
-            for card in soup.select("article[class*='item-card'], div[class*='AdItem']"):
-                try:
-                    title_el = card.select_one("[class*='title'], h2")
-                    price_el = card.select_one("[class*='price']")
-                    link_el  = card.select_one("a[href]")
-                    img_el   = card.select_one("img")
-                    if not (title_el and price_el and link_el):
-                        continue
-                    price_text = (price_el.get_text(strip=True)
-                                  .replace(".", "").replace(",", ".")
-                                  .replace("€", "").strip())
-                    price_val = float("".join(c for c in price_text if c.isdigit() or c == ".") or 0)
-                    href = link_el.get("href", "")
-                    if not href.startswith("http"):
-                        href = "https://www.subito.it" + href
-                    if price_min <= price_val <= price_max and href:
-                        results.append({
-                            "source": "Subito.it",
-                            "title": title_el.get_text(strip=True),
-                            "price": price_val,
-                            "url": href,
-                            "image": img_el.get("src", "") if img_el else "",
-                            "location": "Italia",
-                            "date": "",
-                            "matched_variant": query,
-                        })
-                except Exception:
-                    pass
-
-        # ── Description search ───────────────────────────────────────
-        # Also search listings that might not match title but match description
-        if search_description:
-            query_lower = query.lower()
-            checked = 0
-            desc_results = []
-
-            # Get ALL listings on page (without price filter for description check)
-            all_cards = soup.select("article[class*='item-card'], div[class*='AdItem']")
-            for card in all_cards:
-                if checked >= MAX_SUBITO_DESC_CHECKS:
-                    break
-                try:
-                    link_el  = card.select_one("a[href]")
-                    price_el = card.select_one("[class*='price']")
-                    title_el = card.select_one("[class*='title'], h2")
-                    if not (link_el and price_el):
-                        continue
-                    price_text = (price_el.get_text(strip=True)
-                                  .replace(".", "").replace(",", ".")
-                                  .replace("€", "").strip())
-                    price_val = float("".join(c for c in price_text if c.isdigit() or c == ".") or 0)
-                    if not (price_min <= price_val <= price_max):
-                        continue
-                    href = link_el.get("href", "")
-                    if not href.startswith("http"):
-                        href = "https://www.subito.it" + href
-
-                    # Skip if already found via title search
-                    if any(r["url"] == href for r in results):
-                        continue
-
-                    # Fetch description
-                    desc = fetch_subito_description(href, headers)
-                    checked += 1
-                    if query_lower in desc:
-                        img_el = card.select_one("img")
-                        desc_results.append({
-                            "source": "Subito.it",
-                            "title": (title_el.get_text(strip=True) if title_el else "Annuncio") + " 📝",
-                            "price": price_val,
-                            "url": href,
-                            "image": img_el.get("src", "") if img_el else "",
-                            "location": "Italia",
-                            "date": "",
-                            "matched_variant": query,
-                            "found_in": "descrizione",
-                        })
-                except Exception:
-                    pass
-
-            if desc_results:
-                print(f"[Subito.it] Found {len(desc_results)} extra listings via description for '{query}'")
-            results.extend(desc_results)
-
         return results
-
     except Exception as e:
-        print(f"[Subito.it] Error for '{query}': {e}")
+        print(f"[Subito.it RSS] Error for '{query}': {e}")
         return []
 
 
 def search_subito(query: str, variants: list[str], price_min: float, price_max: float) -> list[dict]:
-    """Search Subito.it with all variants, deduplicate by URL."""
+    """Search Subito.it via RSS with all variants, deduplicate by URL."""
     all_results = {}
     for v in variants:
-        results = search_subito_single(v, price_min, price_max, search_description=True)
+        results = search_subito_rss(v, price_min, price_max)
         for r in results:
             uid = make_id(r["url"])
             if uid not in all_results:
                 all_results[uid] = r
+        if len(variants) > 1:
+            time.sleep(random.uniform(0.5, 1))
     print(f"[Subito.it] '{query}' → {len(all_results)} unique listings across {len(variants)} variants")
     return list(all_results.values())
 
