@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:18:05.973Z",
+  "generated": "2026-03-09T19:25:29.591Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -116,6 +116,17 @@
       "query": "watch ultra 2",
       "min": 250,
       "max": 390,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "8i97eue",
+      "query": "Brionvega cubo",
+      "min": 50,
+      "max": 120,
       "active": true,
       "platforms": [
         "ebay",
