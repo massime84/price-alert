@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:11:23.415Z",
+  "generated": "2026-03-09T19:11:43.676Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -16,7 +16,7 @@
       "id": "ksp60rv",
       "query": "macbook m2",
       "min": 250,
-      "max": 500,
+      "max": 550,
       "active": true,
       "platforms": [
         "ebay",
