@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:10:01.068Z",
+  "generated": "2026-03-09T19:10:26.920Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -39,6 +39,17 @@
       "query": "17 pro",
       "min": 800,
       "max": 900,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "e9v6ybe",
+      "query": "17 pro max",
+      "min": 800,
+      "max": 950,
       "active": true,
       "platforms": [
         "ebay",
