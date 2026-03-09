@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:10:42.822Z",
+  "generated": "2026-03-09T19:10:50.285Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -60,7 +60,7 @@
       "id": "mb9jch8",
       "query": "watch ultra 3",
       "min": 400,
-      "max": 510,
+      "max": 550,
       "active": true,
       "platforms": [
         "ebay",
