@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T19:16:42.908Z",
+  "generated": "2026-03-09T19:16:59.140Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -81,6 +81,17 @@
     {
       "id": "yhv1lbu",
       "query": "16 pro",
+      "min": 500,
+      "max": 650,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "zwpsg92",
+      "query": "iphone 16 pro",
       "min": 500,
       "max": 650,
       "active": true,
