@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-10T12:42:47.191Z",
+  "generated": "2026-03-10T20:20:30.744Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -160,6 +160,17 @@
       "query": "Macbook m3",
       "min": 400,
       "max": 600,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "atp35pw",
+      "query": "Switch 2",
+      "min": 250,
+      "max": 350,
       "active": true,
       "platforms": [
         "ebay",
