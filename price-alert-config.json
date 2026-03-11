@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-10T20:20:30.744Z",
+  "generated": "2026-03-11T15:49:26.064Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -171,6 +171,17 @@
       "query": "Switch 2",
       "min": 250,
       "max": 350,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "2xjobno",
+      "query": "Xbox x",
+      "min": 150,
+      "max": 250,
       "active": true,
       "platforms": [
         "ebay",
