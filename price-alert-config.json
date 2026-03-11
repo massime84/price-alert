@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-11T17:38:23.076Z",
+  "generated": "2026-03-11T17:45:32.671Z",
   "searches": [
     {
       "id": "qtp3jue",
@@ -193,6 +193,17 @@
       "query": "Macbook 14",
       "min": 500,
       "max": 1000,
+      "active": true,
+      "platforms": [
+        "ebay",
+        "subito"
+      ]
+    },
+    {
+      "id": "4ld42jm",
+      "query": "iMac 24",
+      "min": 300,
+      "max": 600,
       "active": true,
       "platforms": [
         "ebay",
