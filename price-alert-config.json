@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-12T20:51:48.947Z",
+  "generated": "2026-03-12T20:52:31.281Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -159,6 +159,16 @@
       "active": true,
       "platforms": [
         "subito"
+      ]
+    },
+    {
+      "id": "fnadb91",
+      "query": "Tastiera id",
+      "min": 20,
+      "max": 40,
+      "active": true,
+      "platforms": [
+        "vinted"
       ]
     }
   ]
