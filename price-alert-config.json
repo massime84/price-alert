@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-12T20:43:42.792Z",
+  "generated": "2026-03-12T20:51:48.947Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -128,8 +128,7 @@
       "max": 120,
       "active": true,
       "platforms": [
-        "subito",
-        "vinted"
+        "subito"
       ]
     },
     {
