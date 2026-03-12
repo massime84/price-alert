@@ -1,223 +1,153 @@
 {
-  "generated": "2026-03-11T18:17:49.826Z",
+  "generated": "2026-03-12T20:43:33.765Z",
   "searches": [
     {
-      "id": "qtp3jue",
-      "query": "macbook m1",
-      "min": 250,
+      "id": "cdknc7d",
+      "query": "Macbook m1",
+      "min": 200,
       "max": 350,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "ksp60rv",
-      "query": "macbook m2",
+      "id": "qfpm59b",
+      "query": "Macbook m2",
       "min": 250,
-      "max": 550,
+      "max": 500,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "tdfsypb",
-      "query": "macbook m4",
-      "min": 500,
+      "id": "pxdryik",
+      "query": "iPhone 14 pro",
+      "min": 250,
+      "max": 330,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "y830udl",
+      "query": "Macbook m4",
+      "min": 400,
       "max": 800,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "umchey7",
+      "id": "9vap6oi",
       "query": "17 pro",
-      "min": 800,
+      "min": 750,
       "max": 900,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "e9v6ybe",
+      "id": "fjmnldf",
       "query": "17 pro max",
-      "min": 800,
-      "max": 950,
+      "min": 750,
+      "max": 900,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "mb9jch8",
-      "query": "watch ultra 3",
+      "id": "3htzrkq",
+      "query": "Watch ultra 3",
       "min": 400,
-      "max": 550,
+      "max": 500,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "psn7q8f",
-      "query": "playstation 5",
+      "id": "e7ee50i",
+      "query": "PlayStation 5",
       "min": 180,
       "max": 230,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "yhv1lbu",
+      "id": "w448w70",
       "query": "16 pro",
       "min": 500,
       "max": 650,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "zwpsg92",
+      "id": "hgpsc06",
       "query": "iphone 16 pro",
       "min": 500,
       "max": 650,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "zbuiph9",
+      "id": "smg3std",
       "query": "iphone 15 pro",
       "min": 350,
       "max": 500,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "khey61d",
-      "query": "watch ultra 2",
-      "min": 250,
-      "max": 390,
-      "active": true,
-      "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "8i97eue",
-      "query": "Brionvega cubo",
-      "min": 50,
-      "max": 120,
-      "active": true,
-      "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "m96ltux",
-      "query": "14 pro",
-      "min": 250,
+      "id": "xvloujs",
+      "query": "Watch ultra",
+      "min": 200,
       "max": 350,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "47o1kdj",
+      "id": "1or9d37",
       "query": "MacBook Pro m4",
-      "min": 700,
+      "min": 600,
       "max": 1000,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "l4uo6qe",
+      "id": "sdrblid",
       "query": "Macbook m3",
       "min": 400,
       "max": 600,
       "active": true,
       "platforms": [
-        "ebay",
         "subito"
       ]
     },
     {
-      "id": "atp35pw",
-      "query": "Switch 2",
-      "min": 250,
-      "max": 350,
-      "active": true,
-      "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "2xjobno",
-      "query": "Xbox x",
-      "min": 150,
-      "max": 250,
-      "active": true,
-      "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "amrvmyb",
-      "query": "Macbook 14",
-      "min": 500,
-      "max": 1000,
-      "active": true,
-      "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "4ld42jm",
+      "id": "j3q41cp",
       "query": "iMac 24",
       "min": 300,
       "max": 600,
       "active": true,
       "platforms": [
-        "ebay",
-        "subito"
-      ]
-    },
-    {
-      "id": "kcbfj4u",
-      "query": "Mac m4",
-      "min": 300,
-      "max": 470,
-      "active": true,
-      "platforms": [
-        "ebay",
         "subito"
       ]
     }
