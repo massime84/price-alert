@@ -220,6 +220,26 @@ function App() {
     showToast("Config esportata ✓");
   }
 
+  async function loadFromGitHub() {
+    if (!ghToken) { setShowTokenModal(true); return; }
+    setSyncing(true);
+    try {
+      const r = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`, {
+        headers: { Authorization: `token ${ghToken}`, Accept: "application/vnd.github.v3+json" }
+      });
+      if (!r.ok) throw new Error("File non trovato");
+      const data = await r.json();
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+      const loaded = decoded.searches || [];
+      setSearches(loaded);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
+      showToast(`Caricate ${loaded.length} ricerche da GitHub ✓`);
+    } catch(e) {
+      showToast("Errore caricamento da GitHub", "err");
+    }
+    setSyncing(false);
+  }
+
   if (!authed) return <Login onAuth={() => setAuthed(true)} />;
 
   const active = searches.filter(s => s.active).length;
@@ -264,6 +284,9 @@ function App() {
       <div style={S.toolbar}>
         <button className="btn-primary" onClick={openAdd} style={{...S.btn, background:"var(--accent)", color:"#0b0c0f"}}>
           + Aggiungi ricerca
+        </button>
+        <button className="btn-ghost" onClick={loadFromGitHub} style={{...S.btn, background:"var(--surface)", color:"var(--muted)", border:"1px solid var(--border2)"}}>
+          ↑ Carica da GitHub
         </button>
         {searches.length > 0 && (
           <button className="btn-ghost" onClick={exportConfig} style={{...S.btn, background:"var(--surface)", color:"var(--muted)", border:"1px solid var(--border2)"}}>
