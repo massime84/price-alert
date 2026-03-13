@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-13T18:47:04.225Z",
+  "generated": "2026-03-13T18:47:33.767Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -176,6 +176,16 @@
       "query": "16 plus",
       "min": 400,
       "max": 600,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "l11in4p",
+      "query": "15 plus",
+      "min": 350,
+      "max": 500,
       "active": true,
       "platforms": [
         "subito"
