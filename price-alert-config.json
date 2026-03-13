@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-13T18:48:00.865Z",
+  "generated": "2026-03-13T18:49:36.161Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -55,7 +55,7 @@
       "id": "fjmnldf",
       "query": "17 pro max",
       "min": 750,
-      "max": 900,
+      "max": 1000,
       "active": true,
       "platforms": [
         "subito"
