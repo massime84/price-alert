@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-13T08:46:29.619Z",
+  "generated": "2026-03-13T18:47:04.225Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -169,6 +169,16 @@
       "active": true,
       "platforms": [
         "vinted"
+      ]
+    },
+    {
+      "id": "klwkw15",
+      "query": "16 plus",
+      "min": 400,
+      "max": 600,
+      "active": true,
+      "platforms": [
+        "subito"
       ]
     }
   ]
