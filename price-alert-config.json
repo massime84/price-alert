@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-13T18:49:36.161Z",
+  "generated": "2026-03-13T20:25:14.801Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -186,6 +186,16 @@
       "query": "14 plus",
       "min": 200,
       "max": 350,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "w0966go",
+      "query": "Mcbook",
+      "min": 250,
+      "max": 1000,
       "active": true,
       "platforms": [
         "subito"
