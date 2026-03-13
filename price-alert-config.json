@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-13T20:25:14.801Z",
+  "generated": "2026-03-13T20:26:42.410Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -196,6 +196,16 @@
       "query": "Mcbook",
       "min": 250,
       "max": 1000,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "l7gbre6",
+      "query": "Air 2020",
+      "min": 100,
+      "max": 250,
       "active": true,
       "platforms": [
         "subito"
