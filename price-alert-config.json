@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-14T10:56:16.356Z",
+  "generated": "2026-03-14T20:19:45.170Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -226,6 +226,16 @@
       "query": "Mac m3",
       "min": 350,
       "max": 600,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "20q6l1r",
+      "query": "L’umidità tz99",
+      "min": 200,
+      "max": 400,
       "active": true,
       "platforms": [
         "subito"
