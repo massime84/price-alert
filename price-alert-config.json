@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-14T20:33:35.300Z",
+  "generated": "2026-03-14T20:39:26.674Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -235,7 +235,7 @@
       "id": "20q6l1r",
       "query": "Lumix tz99",
       "min": 200,
-      "max": 400,
+      "max": 430,
       "active": true,
       "platforms": [
         "subito"
