@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T17:48:10.664Z",
+  "generated": "2026-03-16T17:48:31.470Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -84,16 +84,6 @@
     {
       "id": "w448w70",
       "query": "16 pro",
-      "min": 500,
-      "max": 650,
-      "active": true,
-      "platforms": [
-        "subito"
-      ]
-    },
-    {
-      "id": "hgpsc06",
-      "query": "iphone 16 pro",
       "min": 500,
       "max": 650,
       "active": true,
