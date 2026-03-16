@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T11:27:45.708Z",
+  "generated": "2026-03-16T17:48:10.664Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -266,6 +266,16 @@
       "query": "Macbook 16",
       "min": 250,
       "max": 500,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "hr9w6y1",
+      "query": "Switch 2",
+      "min": 250,
+      "max": 340,
       "active": true,
       "platforms": [
         "subito"
