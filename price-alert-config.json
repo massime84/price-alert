@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T17:48:53.547Z",
+  "generated": "2026-03-16T17:49:24.281Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -195,7 +195,7 @@
       "id": "l7gbre6",
       "query": "Air 2020",
       "min": 100,
-      "max": 250,
+      "max": 280,
       "active": true,
       "platforms": [
         "subito"
