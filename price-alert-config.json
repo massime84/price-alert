@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T17:48:31.470Z",
+  "generated": "2026-03-16T17:48:53.547Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -93,7 +93,7 @@
     },
     {
       "id": "smg3std",
-      "query": "iphone 15 pro",
+      "query": "15 pro",
       "min": 350,
       "max": 500,
       "active": true,
