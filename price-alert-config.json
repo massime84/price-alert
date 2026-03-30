@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T17:49:24.281Z",
+  "generated": "2026-03-30T17:58:08.098Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -266,6 +266,16 @@
       "query": "Switch 2",
       "min": 250,
       "max": 340,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "zhjenwy",
+      "query": "Mac m2",
+      "min": 300,
+      "max": 500,
       "active": true,
       "platforms": [
         "subito"
