@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-30T17:58:08.098Z",
+  "generated": "2026-03-30T17:58:23.140Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -276,6 +276,16 @@
       "query": "Mac m2",
       "min": 300,
       "max": 500,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "h9k89s0",
+      "query": "Mac studio",
+      "min": 600,
+      "max": 1000,
       "active": true,
       "platforms": [
         "subito"
