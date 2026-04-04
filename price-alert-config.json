@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-04T10:27:06.914Z",
+  "generated": "2026-04-04T19:07:11.731Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -276,6 +276,16 @@
       "query": "Mac studio",
       "min": 600,
       "max": 1000,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
+    {
+      "id": "puzx90l",
+      "query": "SX740",
+      "min": 250,
+      "max": 450,
       "active": true,
       "platforms": [
         "subito"
