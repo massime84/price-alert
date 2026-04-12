@@ -1,6 +1,16 @@
 {
-  "generated": "2026-04-12T10:54:21.061Z",
+  "generated": "2026-04-12T10:54:24.942Z",
   "searches": [
+    {
+      "id": "cdknc7d",
+      "query": "Macbook m1",
+      "min": 100,
+      "max": 350,
+      "active": true,
+      "platforms": [
+        "subito"
+      ]
+    },
     {
       "id": "qfpm59b",
       "query": "Macbook m2",
