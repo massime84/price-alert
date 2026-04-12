@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-12T10:54:24.942Z",
+  "generated": "2026-04-12T18:50:29.302Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -233,9 +233,9 @@
     },
     {
       "id": "92coyx2",
-      "query": "Rayban meta",
-      "min": 150,
-      "max": 220,
+      "query": "Pro m1",
+      "min": 200,
+      "max": 400,
       "active": true,
       "platforms": [
         "subito"
