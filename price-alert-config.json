@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-12T18:50:29.302Z",
+  "generated": "2026-04-15T15:35:34.861Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -153,9 +153,9 @@
     },
     {
       "id": "klwkw15",
-      "query": "16 plus",
+      "query": "Macbook 2024",
       "min": 400,
-      "max": 600,
+      "max": 700,
       "active": true,
       "platforms": [
         "subito"
