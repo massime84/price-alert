@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-15T15:35:51.964Z",
+  "generated": "2026-04-18T15:10:10.878Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -216,16 +216,6 @@
       "query": "Lumix tz99",
       "min": 200,
       "max": 430,
-      "active": true,
-      "platforms": [
-        "subito"
-      ]
-    },
-    {
-      "id": "lme6yzo",
-      "query": "Tastiera apple",
-      "min": 15,
-      "max": 60,
       "active": true,
       "platforms": [
         "subito"
