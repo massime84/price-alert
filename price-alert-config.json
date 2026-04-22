@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-22T20:36:09.574Z",
+  "generated": "2026-04-22T20:36:14.583Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -149,6 +149,16 @@
       "active": true,
       "platforms": [
         "subito"
+      ]
+    },
+    {
+      "id": "fnadb91",
+      "query": "Macbook roma",
+      "min": 250,
+      "max": 500,
+      "active": true,
+      "platforms": [
+        "vinted"
       ]
     },
     {
