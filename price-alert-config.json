@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-03T15:32:06.062Z",
+  "generated": "2026-05-09T20:46:05.793Z",
   "searches": [
     {
       "id": "cdknc7d",
@@ -113,9 +113,9 @@
     },
     {
       "id": "73jxjd6",
-      "query": "Brionvega cubo",
-      "min": 50,
-      "max": 120,
+      "query": "Asus rog ally",
+      "min": 200,
+      "max": 300,
       "active": true,
       "platforms": [
         "subito"
